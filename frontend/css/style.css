@@ -1,0 +1,6 @@
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Arial;background:#ffffcc;padding:1rem}
+header,footer{background:#fff8d3;padding:1rem;text-align:center;border-radius:12px;box-shadow:0 2px 6px #0001;margin-bottom:1rem}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.tool-card{display:block;background:#fff;color:#222;text-decoration:none;border-radius:12px;padding:1rem;box-shadow:0 2px 10px #0001;transition:.2s}
+.tool-card:hover{transform:scale(1.02)}
