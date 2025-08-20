@@ -4,3 +4,30 @@ header,footer{background:#fff8d3;padding:1rem;text-align:center;border-radius:12
 .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
 .tool-card{display:block;background:#fff;color:#222;text-decoration:none;border-radius:12px;padding:1rem;box-shadow:0 2px 10px #0001;transition:.2s}
 .tool-card:hover{transform:scale(1.02)}
+
+/* css/style.css */
+
+.tools-grid {
+    display: grid;
+    /* Her satırda 2 kart ve aralarında 20px boşluk olacak */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 20px;
+    max-width: 800px; /* Opsiyonel: Daha dar bir sayfa için */
+    margin: 40px auto; /* Ortalamak için */
+}
+
+/* Kartların kendisi için stil */
+.tool-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s;
+    text-decoration: none;
+    color: #333;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+}

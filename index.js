@@ -3,209 +3,179 @@ const cors = require("cors");
 const axios = require("axios");
 const path = require("path");
 const FormData = require("form-data");
+const multer = require("multer");
 require("dotenv").config();
 
 const app = express();
-const OpenAI = require("openai");
+const PORT = process.env.PORT || 4001;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_TOKEN,
+// Multer ile bellek içi dosya yükleme yapılandırması
+// 10MB dosya boyutu sınırı eklendi
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
 });
 
-// Replicate'tan bir modelin en son version id'sini çek
-async function getLatestVersion(modelName) {
-  const url = `https://api.replicate.com/v1/models/${modelName}/versions`;
-  const r = await axios.get(url, {
-    headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-  });
-  const versions = r.data?.results || [];
-  if (!versions.length) throw new Error(`Model versiyonu bulunamadı: ${modelName}`);
-  return versions[0].id;
-}
-
-// middleware
+// Middleware
 app.use(cors());
-app.use(express.json({ limit: "10mb" })); // base64 rahat sığsın
-
-// statik frontend
-const STATIC_DIR = path.join(__dirname, "frontend");
-app.use(express.static(STATIC_DIR));
-
-// sağlık
+app.use(express.json({ limit: "10mb" }));
+app.use(express.static(path.join(__dirname, "frontend")));
 app.get("/health", (_, res) => res.json({ ok: true }));
 
-// token test (Bearer)
-app.get("/token-test", async (req, res) => {
-  try {
-    const r = await axios.get("https://api.replicate.com/v1/collections", {
-      headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-    });
-    res.json({ ok: true, count: (r.data?.results || []).length });
-  } catch (e) {
-    res.status(500).json({ ok: false, status: e.response?.status, detail: e.response?.data || e.message });
-  }
-});
+// İstek için zamanaşımı (timeout) ayarı
+const TIMEOUT_MS = 300000; // 5 dakika
 
-// base64 -> Files(content as FILE) -> GFPGAN
-app.post("/api/fix-image", async (req, res) => {
-  console.log("HIT /api/fix-image");
-  try {
-    const { base64Image } = req.body;
-
-    // 1) Girdi doğrulama + base64 ayrıştırma
-    if (!base64Image || !base64Image.startsWith("data:image/")) {
-      return res.status(400).json({ error: "Geçersiz base64", detail: "data:image/... ile başlamıyor" });
-    }
-    const m = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
-    if (!m) return res.status(400).json({ error: "Geçersiz data URL" });
-
-    const mime = m[1];
-    const raw = m[2];
-    const ext = (mime.split("/")[1] || "png").toLowerCase();
-
-    // 2) Buffer’a çevir ve DEBUG log
-    const buffer = Buffer.from(raw, "base64");
-    console.log("DEBUG mime:", mime, "rawLen:", raw.length, "bufferLen:", buffer.length);
-    console.log("DEBUG first bytes:", buffer.subarray(0, 16));
-
-    if (buffer.length === 0) {
-      return res.status(400).json({ error: "Boş içerik", detail: "Base64 decode sonucu 0 byte" });
-    }
-
-    // 3) Replicate Files — multipart/form-data (ALAN ADI: `content`)
-    const form = new FormData();
-    form.append("content", buffer, {
-      filename: `upload.${ext}`,
-      contentType: mime,
-      knownLength: buffer.length,
-    });
-
-    console.log("Uploading to Replicate Files (multipart:content) size:", buffer.length);
-
-    const upload = await axios.post("https://api.replicate.com/v1/files", form, {
-      headers: {
-        Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`, // Files: Token
-        ...form.getHeaders(),
-      },
-      maxBodyLength: Infinity,
-    });
-
-    const imageUrl = upload?.data?.urls?.download || upload?.data?.urls?.get;
-    console.log("Files API response urls:", upload?.data?.urls);
-    if (!imageUrl) {
-      return res.status(500).json({ error: "Yükleme URL'i alınamadı", detail: upload?.data || null });
-    }
-
-    // 4) En son versiyonu çek
-    const modelName = process.env.REPLICATE_MODEL || "tencentarc/gfpgan";
-    console.log("Fetching latest version for", modelName);
-    const versionId = await getLatestVersion(modelName);
-    console.log("Using version:", versionId);
-
-    // 5) Prediction (GFPGAN) — önce 'image' ile dener, 400 olursa 'img' ile tekrar dener
-    let start;
-    let inputField = 'image'; // Varsayılan olarak 'image' kullan
+// Stability AI'den video oluşturmak için backend rotası
+// Hem metin hem de görsel kabul ediyor
+app.post("/api/stability-ai-video-generator", upload.single('image'), async (req, res) => {
+    console.log("HIT /api/stability-ai-video-generator (Stability AI API)");
     try {
-      start = await axios.post(
-        "https://api.replicate.com/v1/predictions",
-        { version: versionId, input: { [inputField]: imageUrl } },
-        { headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`, "Content-Type": "application/json" } }
-      );
-    } catch (e) {
-      if (e.response?.status === 422 && e.response?.data?.detail?.includes("img is required")) {
-        console.warn("Retrying prediction with 'img' field due to 422 error...");
-        inputField = 'img'; // Input alanını 'img' olarak değiştir
-        start = await axios.post(
-          "https://api.replicate.com/v1/predictions",
-          { version: versionId, input: { [inputField]: imageUrl } },
-          { headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`, "Content-Type": "application/json" } }
-        );
-      } else {
-        // Başka bir 422 hatası veya farklı bir hata türüyse, fırlat
-        console.error("Prediction API error:", {
-          status: e.response?.status,
-          resp: e.response?.data,
-          message: e.message,
+        const { prompt } = req.body;
+        const imageFile = req.file;
+
+        if (!prompt || !imageFile) {
+            return res.status(400).json({ error: "Metin ve bir görüntü gerekli." });
+        }
+
+        const stabilityApiKey = process.env.STABILITY_AI_API_KEY;
+        if (!stabilityApiKey) {
+            console.error("HATA: STABILITY_AI_API_KEY .env dosyasında tanımlı değil!");
+            return res.status(500).json({ error: "API anahtarı eksik. Lütfen .env dosyanızı kontrol edin." });
+        }
+        
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('image', imageFile.buffer, {
+            filename: imageFile.originalname,
+            contentType: imageFile.mimetype,
         });
-        throw e;
-      }
+        
+        // Stability AI API'sine ilk isteği gönderme
+        const startResponse = await axios.post(
+            `https://api.stability.ai/v2beta/stable-image/generate/video`,
+            formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${stabilityApiKey}`,
+                    ...formData.getHeaders(),
+                    Accept: 'application/json',
+                },
+                timeout: TIMEOUT_MS // İstek zamanaşımı
+            }
+        );
+        
+        const jobId = startResponse.data.id;
+        
+        let status = startResponse.data.status;
+        let videoUrl = null;
+        let attempts = 0;
+        const maxAttempts = 120; // 4 dakikaya kadar bekle (2 saniye * 120 deneme)
+
+        // Video hazır olana kadar API'yi sorgulama
+        while (status !== "succeeded" && status !== "failed" && attempts < maxAttempts) {
+            await new Promise((r) => setTimeout(r, 2000));
+            const pollResponse = await axios.get(
+                `https://api.stability.ai/v2beta/stable-image/generate/video/result/${jobId}`,
+                {
+                    headers: { Authorization: `Bearer ${stabilityApiKey}` },
+                    timeout: TIMEOUT_MS // İstek zamanaşımı
+                }
+            );
+            
+            status = pollResponse.data.status;
+            
+            if (status === "succeeded") {
+                videoUrl = pollResponse.data.video;
+            }
+            
+            attempts++;
+            console.log("Video oluşturma durumu:", status, "Deneme:", attempts);
+        }
+
+        if (status !== "succeeded") {
+            const errorDetail = `Video oluşturma ${status} durumuyla sonuçlandı.`;
+            return res.status(500).json({ error: "Video oluşturma başarısız", status, detail: errorDetail });
+        }
+
+        if (!videoUrl) {
+            return res.status(500).json({ error: "API'den geçerli bir video URL'si gelmedi." });
+        }
+
+        res.json({ videoUrl, status: "succeeded" });
+
+    } catch (e) {
+        console.error("BACKEND ERROR (Stability AI API) =>", {
+            status: e.response?.status,
+            resp: e.response?.data,
+            message: e.message,
+        });
+        res.status(500).json({ error: "API çağrısı başarısız", status: e.response?.status, detail: e.response?.data?.error || e.message });
     }
+});
 
-
-    // 6) Poll (Bearer)
-    let status = start.data.status;
-    let final = start.data;
-    const getUrl = start.data.urls.get;
-
-    while (status === "starting" || status === "processing") {
-      await new Promise((r) => setTimeout(r, 2000));
-      const poll = await axios.get(getUrl, {
-        headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-      });
-      status = poll.data.status;
-      final = poll.data;
-      console.log("Poll status:", status);
+// Eski API rotasını yeni Stability AI rotasına yönlendiren vekil rota
+app.post("/api/video-generator", upload.single('image'), async (req, res) => {
+    try {
+        const formData = new FormData();
+        formData.append('prompt', req.body.prompt);
+        if (req.file) {
+            formData.append('image', req.file.buffer, {
+                filename: req.file.originalname,
+                contentType: req.file.mimetype,
+            });
+        }
+        
+        const response = await axios.post("http://localhost:4001/api/stability-ai-video-generator", formData, {
+            headers: {
+                ...formData.getHeaders(),
+                ...req.headers
+            },
+            timeout: TIMEOUT_MS // Vekil çağrısı için zamanaşımı
+        });
+        res.json(response.data);
+    } catch (e) {
+        console.error("PROXY ERROR:", e.message);
+        res.status(e.response?.status || 500).json({
+            error: "Vekil çağrı başarısız.",
+            detail: e.response?.data?.detail || e.message,
+        });
     }
-
-    if (status !== "succeeded") {
-      return res.status(500).json({ error: "Model failed", status, detail: final?.logs || final });
-    }
-
-    const output = Array.isArray(final.output) ? final.output[0] : final.output;
-    res.json({ output, status: final.status });
-  } catch (e) {
-    console.error("BACKEND ERROR =>", {
-      status: e.response?.status,
-      resp: e.response?.data,
-      message: e.message,
-    });
-    res.status(500).json({ error: "API çağrısı başarısız", status: e.response?.status, detail: e.response?.data || e.message });
-  }
 });
 
 
-// Yeni araç: OpenAI ile Metin Üretme
+// Metin üretimi için Writer API'sine çağrı yapacak olan endpoint
 app.post("/api/text-generator", async (req, res) => {
+    console.log("HIT /api/text-generator (Writer API)");
     try {
         const { prompt } = req.body;
         if (!prompt) {
             return res.status(400).json({ error: "Prompt gerekli." });
         }
+        const writerApiUrl = "https://api.writer.com/v1/completions";
 
-        // Replicate veya OpenAI API çağrı mantığı buraya gelecek
-        // Örn: Replicate'deki bir metin üretme modelini kullanın
-        const modelName = "meta/llama-2-70b-chat";
-        const versionId = "db21e45d3f7023abc2a46ee38a23973f6dce16bb08812a9a4b3d7d8e438c5357";
-        
-        const start = await axios.post(
-            "https://api.replicate.com/v1/predictions",
-            { version: versionId, input: { prompt: prompt } },
-            { headers: { Authorization: `Bearer ${process.env.OPENAI_API_TOKEN}`, "Content-Type": "application/json" } }
-        );
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.TEXT_GENERATION}`,
+        };
 
-        // ... (Poll ve çıktıyı bekleme mantığı aynı kalacak) ...
-        let status = start.data.status;
-        let final = start.data;
-        const getUrl = start.data.urls.get;
+        const body = {
+            model: "palmyra-x-003-instruct",
+            prompt: prompt,
+            max_tokens: 150,
+            temperature: 0.7,
+            top_p: 0.9,
+            stop: ["."],
+            best_of: 1,
+            random_seed: 42,
+            stream: false
+        };
+        const response = await axios.post(writerApiUrl, body, { headers });
+        const output = response.data.choices[0].text;
 
-        while (status === "starting" || status === "processing") {
-            await new Promise((r) => setTimeout(r, 2000));
-            const poll = await axios.get(getUrl, {
-                headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-            });
-            status = poll.data.status;
-            final = poll.data;
-        }
-
-        if (status !== "succeeded") {
-            return res.status(500).json({ error: "Model failed", status, detail: final?.logs || final });
-        }
-
-        const output = Array.isArray(final.output) ? final.output.join('') : final.output;
-        res.json({ output, status: final.status });
-
+        res.json({ output, status: "succeeded" });
     } catch (e) {
-        console.error("BACKEND ERROR =>", {
+        console.error("BACKEND ERROR (Writer API) =>", {
             status: e.response?.status,
             resp: e.response?.data,
             message: e.message,
@@ -214,36 +184,5 @@ app.post("/api/text-generator", async (req, res) => {
     }
 });
 
-app.post("\api\video-generator", async(req, res) => {
-
-});
-
-
-const PORT = process.env.PORT || 4001;
-
-app.get("/debug/model", async (req, res) => {
-  try {
-    const model = req.query.model || process.env.REPLICATE_MODEL || "tencentarc/gfpgan";
-    const url = `https://api.replicate.com/v1/models/${model}/versions`;
-    const r = await axios.get(url, {
-      headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-    });
-    const results = r.data?.results || [];
-    console.log("DEBUG_MODEL ok:", model, "count:", results.length);
-    res.json({
-      ok: true,
-      model,
-      count: results.length,
-      sample: results.slice(0, 2).map(v => ({ id: v.id, created_at: v.created_at })),
-    });
-  } catch (e) {
-    console.error("DEBUG_MODEL_ERROR", e.response?.status, e.response?.data || e.message);
-    res.status(e.response?.status || 500).json({
-      ok: false,
-      status: e.response?.status,
-      detail: e.response?.data || e.message,
-    });
-  }
-});
-
+// Sunucuyu başlat
 app.listen(PORT, () => console.log(`✅ Sunucu hazır: http://localhost:${PORT}`));
