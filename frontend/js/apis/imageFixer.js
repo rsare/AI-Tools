@@ -154,8 +154,8 @@ export function run({ backendBaseUrl }) {
     out.textContent = "Yükleniyor...";
     const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
     try {
-      console.log("POST /api/fix-image", backendBaseUrl);
-      const r = await fetch(`${backendBaseUrl}/api/fix-image`, {
+      console.log("POST /api/image-fixer", backendBaseUrl);
+      const r = await fetch(`${backendBaseUrl}/api/image-fixer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ base64Image: base64 })
