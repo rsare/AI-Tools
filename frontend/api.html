@@ -1,108 +1,123 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Image Fixer</title>
-    <style>
-        body {
-            font-family: system-ui, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>AI Tools – API Page</title>
 
-        #app {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
+  <style>
+    :root { --card-w: 960px; }
+    html, body { height: 100%; }
+    body{
+      font-family: system-ui, Arial, sans-serif;
+      background:#f0f2f5; color:#333; margin:0;
+      min-height:100vh; display:flex; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    #app{
+      background:#fff; padding:30px; border-radius:12px;
+      box-shadow:0 4px 20px rgba(0,0,0,.1);
+      max-width: var(--card-w); width:100%;
+      text-align:center;
+    }
 
-        h2 {
-            font-size: 2.2rem;
-            color: #1a1a1a;
-            margin-bottom: 0.5rem;
-        }
+    /* Eski input/button stillerin (araçlarda kullanılabiliyor) */
+    input[type="file"]{
+      border:2px dashed #ccc; border-radius:8px; padding:20px; display:block;
+      width:calc(100% - 44px); margin:0 auto 20px; text-align:center; color:#888;
+      transition:border-color .3s;
+    }
+    input[type="file"]:hover{ border-color:#007bff; }
+    button{
+      background:#04284d; color:#fff; border:none; padding:12px 24px; border-radius:8px;
+      font-size:1rem; cursor:pointer; transition:background-color .3s, transform .2s;
+      box-shadow:0 2px 5px rgba(0,123,255,.2);
+    }
+    button:hover{ background:#0056b3; transform:translateY(-2px); }
+    #out{
+      margin-top:25px; padding:20px; background:#f9f9f9; border-radius:8px; border:1px solid #eee;
+      min-height:100px; display:flex; align-items:center; justify-content:center; color:#888; font-style:italic;
+    }
+    #out img{ max-width:100%; height:auto; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.1) }
 
-        p {
-            color: #666;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            font-size: 1rem;
-        }
+    /* ------ Global Hamburger Menü (benzersiz ID'ler) ------ */
+    .menu-button{
+      position:fixed; top:20px; left:20px; color:#fff; font-size:28px; cursor:pointer;
+      z-index:100000; width:44px; height:44px; display:grid; place-items:center;
+      background:#0b1328; border:1px solid #ffffff26; border-radius:10px; box-shadow:0 6px 16px #0004;
+      user-select:none; pointer-events:auto;
+    }
+    .sidebar{
+      position:fixed; top:0; left:-260px; width:260px; height:100%;
+      background:#010f23; box-shadow:2px 0 18px rgba(0,0,0,.35);
+      transition:left .28s ease-in-out; z-index:99999; padding-top:60px;
+    }
+    .sidebar.open{ left:0 !important; }
+    .sidebar a{
+      display:block; padding:14px 20px; color:#fff; text-decoration:none; font-size:17px;
+      border-bottom:1px solid #011028; transition:background-color .18s;
+    }
+    .sidebar a:hover{ background:#0b1d3a; }
 
-        input[type="file"] {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 20px;
-            display: block;
-            width: calc(100% - 44px);
-            margin: 0 auto 20px;
-            text-align: center;
-            color: #888;
-            transition: border-color 0.3s;
-        }
-
-        input[type="file"]:hover {
-            border-color: #007bff;
-        }
-
-        button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
-        }
-
-        button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        #out {
-            margin-top: 25px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            border: 1px solid #eee;
-            min-height: 100px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-style: italic;
-            color: #888;
-        }
-
-        #out img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    @media (max-width:560px){
+      #app{ padding-top:56px; }
+    }
+  </style>
 </head>
 <body>
-    <div id="app">Yükleniyor...</div>
-    <script type="module">
-        import "./js/main.js";
-    </script>
+
+  <!-- GLOBAL MENÜ: benzersiz ID'ler -->
+  <div class="menu-button" id="globalMenuButton" title="Menü">&#9776;</div>
+  <nav class="sidebar" id="globalSidebar">
+    <a href="index.html">Main Page</a>
+    <a href="api.html?tool=imageFixer">Image Fixer</a>
+    <a href="api.html?tool=textGenerator">Text Generator</a>
+    <a href="api.html?tool=voiceGenerator">Voice Generator</a>
+    <a href="api.html?tool=videoGenerator">Video Generator</a>
+    <a href="api.html?tool=imageGenerator">Image Generator</a>
+  </nav>
+
+  <!-- Araç içerikleri burada render edilecek -->
+  <div id="app">Yükleniyor...</div>
+
+  <!-- Router -->
+  <script type="module">
+    import "./js/main.js";
+  </script>
+
+  <!-- Hamburger toggle -->
+  <script>
+    (function(){
+      const btn = document.getElementById('globalMenuButton');
+      const sb  = document.getElementById('globalSidebar');
+      if (!btn || !sb) return;
+
+      const close = ()=> sb.classList.remove('open');
+
+      // Aç/Kapat
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); sb.classList.toggle('open'); });
+      btn.addEventListener('mousedown', (e)=> e.stopPropagation());
+
+      // Menü içi linke tıklanınca kapan
+      sb.addEventListener('click', (e)=>{
+        const a = e.target.closest('a');
+        if (a) close();
+        e.stopPropagation();
+      });
+
+      // Dışarı tıklanınca kapan
+      document.addEventListener('click', (e)=>{
+        if (!sb.classList.contains('open')) return;
+        const inside = e.target === sb || sb.contains(e.target) || e.target === btn;
+        if (!inside) close();
+      });
+
+      // ESC ile kapan
+      window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') close(); });
+
+      // İlk durumda kapalı
+      close();
+    })();
+  </script>
 </body>
 </html>

@@ -91,6 +91,7 @@ export async function run({ backendBaseUrl }) {
       <a href="/api.html?tool=textGenerator">Text Generator</a>
       <a href="/api.html?tool=voiceGenerator">Voice Generator</a>
       <a href="/api.html?tool=videoGenerator">Video Generator</a>
+      <a href="api.html?tool=imageGenerator">Image Generator</a>
     </div>
         <h1 class="text-4xl font-bold text-white mb-8 text-center">Video Oluşturucu</h1>
         <div class="space-y-6">

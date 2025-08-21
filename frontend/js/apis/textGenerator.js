@@ -93,6 +93,7 @@ export async function run({ backendBaseUrl }) {
       <a href="/api.html?tool=textGenerator">Text Generator</a>
       <a href="/api.html?tool=voiceGenerator">Voice Generator</a>
       <a href="/api.html?tool=videoGenerator">Video Generator</a>
+      <a href="api.html?tool=imageGenerator">Image Generator</a>
     </div>
     <style>
       .tg-wrap { max-width: 720px; margin: 0 auto; }

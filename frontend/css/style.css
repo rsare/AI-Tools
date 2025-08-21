@@ -31,3 +31,12 @@ header,footer{background:#fff8d3;padding:1rem;text-align:center;border-radius:12
 .tool-card:hover {
     transform: translateY(-5px);
 }
+
+  #grid { display:grid; gap:10px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { #grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .ifix-img { width:300%; height:auto; object-fit:contain; display:block; }
+  /* lightbox */
+  .lb-backdrop{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:9999}
+  .lb-backdrop.show{display:grid}
+  .lb-inner{max-width:min(92vw,1200px);max-height:90vh}
+  .lb-inner img{width:300%;height:auto;object-fit:contain;border-radius:12px}

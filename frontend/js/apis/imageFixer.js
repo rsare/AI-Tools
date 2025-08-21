@@ -90,6 +90,7 @@ export function run({ backendBaseUrl }) {
       <a href="/api.html?tool=textGenerator">Text Generator</a>
       <a href="/api.html?tool=voiceGenerator">Voice Generator</a>
       <a href="/api.html?tool=videoGenerator">Video Generator</a>
+      <a href="api.html?tool=imageGenerator">Image Generator</a>
     </div>
 
     <div class="ifix-shell">
@@ -145,31 +146,34 @@ export function run({ backendBaseUrl }) {
     nm.textContent = f.name;
   });
 
-  document.getElementById("go").onclick = async () => {
-    const f = document.getElementById("imageInput").files[0];
-    const out = document.getElementById("out");
-    if (!f) return alert("Görsel seçin.");
-    if (!["image/png", "image/jpeg"].includes(f.type)) return alert("Sadece PNG/JPEG.");
-    if (f.size > 512000) return alert("En fazla 500 KB.");
-    out.textContent = "Yükleniyor...";
-    const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
-    try {
-      console.log("POST /api/image-fixer", backendBaseUrl);
-      const r = await fetch(`${backendBaseUrl}/api/image-fixer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64Image: base64 })
-      });
+ document.getElementById("go").onclick = async () => {
+        const f = document.getElementById("imageInput").files[0];
+        const out = document.getElementById("out");
+        if (!f) return alert("Görsel seçin.");
+        if (!["image/png", "image/jpeg"].includes(f.type)) return alert("Sadece PNG/JPEG.");
+        if (f.size > 512000) return alert("En fazla 500 KB.");
+        out.textContent = "Yükleniyor...";
 
-      if (!r.ok) {
-        const errorText = await r.text();
-        throw new Error(`Sunucu hatası: ${r.status} ${r.statusText || ''} - ${errorText}`);
-      }
+        try {
+            console.log("POST /api/imageFixer", backendBaseUrl); // Uç nokta adı tutarlı hale getirildi.
+            const formData = new FormData();
+            formData.append('image', f);
+            
+            const r = await fetch(`${backendBaseUrl}/api/imageFixer`, {
+                method: "POST",
+                body: formData
+            });
 
-      const data = await r.json();
-      out.innerHTML = data.output ? `<img src="${data.output}" width="320">` : "Çıktı yok.";
-    }  catch (e) {
-      out.textContent = "Hata: " + e.message;
-    }
-  };
+            if (!r.ok) {
+                const errorText = await r.text();
+                throw new Error(`Sunucu hatası: ${r.status} - ${errorText}`);
+            }
+
+            const data = await r.json();
+            out.innerHTML = data.output ? `<img src="${data.output}" width="320">` : "Çıktı yok.";
+        } catch (e) {
+            out.textContent = "Hata: " + e.message;
+        }
+    };
+
 }
