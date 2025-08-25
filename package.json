@@ -20,6 +20,7 @@
     "express-session": "^1.18.2",
     "form-data": "^4.0.4",
     "multer": "^2.0.2",
-    "openai": "^5.12.2"
+    "openai": "^5.12.2",
+    "sharp": "^0.34.3"
   }
 }

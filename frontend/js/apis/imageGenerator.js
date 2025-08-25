@@ -12,7 +12,7 @@ export async function run({ backendBaseUrl }) {
                box-shadow:2px 0 5px rgba(68,65,65,.5);transition:left .3s;z-index:999;padding-top:60px}
       .sidebar.open{left:0}
       .sidebar a{display:block;padding:15px 20px;color:#fff;text-decoration:none;font-size:18px;
-                 border-bottom:1px solid #4c4e50ff}
+                 border-bottom:1px solid #010f23ff}
       .sidebar a:hover{background:#010f26ff}
     </style>
 
@@ -23,6 +23,9 @@ export async function run({ backendBaseUrl }) {
       <a href="/api.html?tool=textGenerator">Text Generator</a>
       <a href="/api.html?tool=voiceGenerator">Voice Generator</a>
       <a href="/api.html?tool=imageGenerator">Image Generator</a>
+      <a href="api.html?tool=textSummarizer">Text Summarizer</a>
+      <a href="/api.html?tool=imagePixelizer">Image Pixelizer</a>
+
     </nav>
 
     <section class="panel" aria-labelledby="ig-title">

@@ -11,7 +11,19 @@ export async function run({ backendBaseUrl }) {
       <a href="/api.html?tool=textGenerator">Text Generator</a>
       <a href="/api.html?tool=voiceGenerator">Voice Generator</a>
       <a href="/api.html?tool=imageGenerator">Image Generator</a>
+      <a href="api.html?tool=textSummarizer">Text Summarizer</a>
+      <a href="/api.html?tool=imagePixelizer">Image Pixelizer</a>
+
     </nav>
+     <style>
+      .menu-button{position:fixed;top:20px;left:20px;color:#fff;font-size:30px;cursor:pointer;z-index:1000}
+      .sidebar{position:fixed;top:0;left:-250px;width:250px;height:100%;background:#4c4e50ff;
+               box-shadow:2px 0 5px rgba(68,65,65,.5);transition:left .3s;z-index:999;padding-top:60px}
+      .sidebar.open{left:0}
+      .sidebar a{display:block;padding:15px 20px;color:#fff;text-decoration:none;font-size:18px;
+                 border-bottom:1px solid #010f23ff}
+      .sidebar a:hover{background:#010f26ff}
+    </style>
 
     <section class="panel" aria-labelledby="tg-title">
       <h2 id="tg-title" class="h2 title">Metin Oluşturucu</h2>

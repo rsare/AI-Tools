@@ -43,44 +43,14 @@ export function run({ backendBaseUrl }) {
       /* file input'u gizli ama erişilebilir bırak */
       #imageInput{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
 
-      /* ----- Hamburger Menü Stilleri ----- */
-      .menu-button {
-          position: fixed;
-          top: 20px;
-          left: 20px;
-          color: white;
-          font-size: 30px;
-          cursor: pointer;
-          z-index: 1000;
-      }
-      .sidebar {
-          position: fixed;
-          top: 0;
-          left: -250px;
-          width: 250px;
-          height: 100%;
-
-          background: #010f23ff;
-          box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-          transition: left 0.3s ease-in-out;
-          z-index: 999;
-          padding-top: 60px;
-      }
-      .sidebar.open {
-          left: 0;
-      }
-      .sidebar a {
-          display: block;
-          padding: 15px 20px;
-          color: white;
-          text-decoration: none;
-          font-size: 18px;
-          border-bottom: 1px solid #011028ff;
-          transition: background-color 0.2s;
-      }
-      .sidebar a:hover {
-          background-color: #010f26ff;
-      }
+       <style>
+      .menu-button{position:fixed;top:20px;left:20px;color:#fff;font-size:30px;cursor:pointer;z-index:1000}
+      .sidebar{position:fixed;top:0;left:-250px;width:250px;height:100%;background:#4c4e50ff;
+               box-shadow:2px 0 5px rgba(68,65,65,.5);transition:left .3s;z-index:999;padding-top:60px}
+      .sidebar.open{left:0}
+      .sidebar a{display:block;padding:15px 20px;color:#fff;text-decoration:none;font-size:18px;
+                 border-bottom:1px solid #010f23ff}
+      .sidebar a:hover{background:#010f26ff}
     </style>
 
     <div class="menu-button" id="menuButton">&#9776;</div>
@@ -90,6 +60,8 @@ export function run({ backendBaseUrl }) {
       <a href="/api.html?tool=textGenerator">Text Generator</a>
       <a href="/api.html?tool=voiceGenerator">Voice Generator</a>
       <a href="api.html?tool=imageGenerator">Image Generator</a>
+      <a href="api.html?tool=textSummarizer">Text Summarizer</a>
+      <a href="/api.html?tool=imagePixelizer">Image Pixelizer</a>
     </div>
 
     <div class="ifix-shell">

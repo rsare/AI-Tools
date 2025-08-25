@@ -7,6 +7,8 @@ const multer = require("multer");
 const fs = require("fs");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
+const sharp = require("sharp");
+
 require("dotenv").config();
 
 const app = express();
@@ -358,6 +360,178 @@ app.post("/api/text-generator", async (req, res) => {
     });
   }
 });
+
+// ---------------------------------------------
+// Writer – Text Summarizer
+// ---------------------------------------------
+app.post("/api/text-summarize", async (req, res) => {
+  try {
+    let { text, length = "medium", format = "paragraphs", language = "tr" } = req.body || {};
+    text = (text || "").trim();
+
+    if (!text || text.length < 30) {
+      return res.status(400).json({ error: "Özetlenecek metin çok kısa veya eksik." });
+    }
+
+    // uzunluk -> max_tokens
+    const TOKENS = {
+      short: 120,
+      medium: 220,
+      long: 360,
+    };
+    const max_tokens = TOKENS[length] ?? TOKENS.medium;
+
+    const writerApiUrl = "https://api.writer.com/v1/completions";
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.TEXT_GENERATION}`,
+    };
+
+    // Biçim ipucu
+    const formatHint =
+      format === "bullets"
+        ? "- Çıktıyı madde madde (kısa, net) yaz.\n- Gereksiz cümlelerden kaçın."
+        : "Çıktıyı 1-3 akıcı paragraf halinde yaz. Gereksiz tekrarlardan kaçın.";
+
+    // Dil ipucu
+    const langHint =
+      language === "tr"
+        ? "ÇIKTI DİLİ: Türkçe."
+        : "ÇIKTI DİLİ: " + language;
+
+    const prompt = [
+      "Aşağıdaki metni anlaşılır ve bilgi kaybı olmadan özetle.",
+      "Gereksiz detayları çıkar; ana fikir, önemli kavramlar ve kritik sayıları koru.",
+      `Uzunluk: ${length}`,
+      formatHint,
+      langHint,
+      "",
+      "=== METİN ===",
+      text,
+      "=== SON ===",
+    ].join("\n");
+
+    const body = {
+      model: "palmyra-x-003-instruct",
+      prompt,
+      max_tokens,
+      temperature: 0.25,
+      top_p: 0.9,
+      stream: false,
+    };
+
+    const response = await axios.post(writerApiUrl, body, { headers });
+    const summary = response.data?.choices?.[0]?.text?.trim?.() || "";
+
+    if (!summary) {
+      // Basit geri dönüş (fallback): İlk 3 cümleyi ver
+      const firstSentences = text.split(/(?<=[.!?])\s+/).slice(0, 3).join(" ");
+      return res.json({ summary: firstSentences, status: "fallback" });
+    }
+
+    res.json({ summary, status: "succeeded" });
+  } catch (e) {
+    console.error("TEXT-SUMMARIZE ERROR:", {
+      status: e.response?.status,
+      resp: e.response?.data,
+      message: e.message,
+    });
+    // Basit fallback
+    try {
+      const t = (req.body?.text || "").split(/(?<=[.!?])\s+/).slice(0, 3).join(" ");
+      return res.status(200).json({ summary: t, status: "fallback" });
+    } catch {
+      return res.status(500).json({ error: "SummarizeFailed" });
+    }
+  }
+});
+
+
+// ---------------------------------------------
+// Face Pixelizer (proxy + yerel fallback)
+// ---------------------------------------------
+app.post("/api/face-pixelize", upload.single("image"), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "Görsel dosyası eksik." });
+    }
+
+    const mode = (req.body.mode || "pixelate").toLowerCase(); // pixelate | blur
+    const level = Math.min(Math.max(parseInt(req.body.level || "16", 10), 1), 100);
+
+    // İstersen dış servise proxy (FACE_PIXELIZER_ENDPOINT ve FACE_PIXELIZER_API_KEY ver)
+    const endpoint = process.env.FACE_PIXELIZER_ENDPOINT || "";
+    const apiKey = process.env.FACE_PIXELIZER_API_KEY || "";
+
+    if (endpoint) {
+      try {
+        const fd = new FormData();
+        fd.append("image", file.buffer, { filename: file.originalname, contentType: file.mimetype });
+        fd.append("mode", mode);
+        fd.append("level", String(level));
+
+        const resp = await axios.post(endpoint, fd, {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            ...fd.getHeaders(),
+          },
+          timeout: TIMEOUT_MS,
+          responseType: "json",
+        });
+
+        // Servise göre değişebilir – 3 yaygın cevap şekline uyum:
+        let out;
+        const d = resp.data;
+        if (typeof d === "string" && d.startsWith("data:")) {
+          out = d;
+        } else if (d?.output && typeof d.output === "string") {
+          out = d.output.startsWith("data:")
+            ? d.output
+            : `data:image/png;base64,${d.output}`;
+        } else if (d?.url) {
+          const bin = await axios.get(d.url, { responseType: "arraybuffer" });
+          out = `data:image/png;base64,${Buffer.from(bin.data).toString("base64")}`;
+        } else {
+          throw new Error("Beklenmeyen servis çıktısı.");
+        }
+
+        return res.json({ output: out, via: "proxy" });
+      } catch (e) {
+        console.error("FacePixelizer proxy hata:", e?.response?.data || e.message);
+        // Proxy başarısızsa yerel fallback'e düş
+      }
+    }
+
+    // --- Yerel fallback (tüm görseli uygular) ---
+    // pixelate: küçült -> nearest neighbor ile büyüt
+    // blur: gaussian blur
+    const img = sharp(file.buffer);
+    const meta = await img.metadata();
+
+    let outBuf;
+    if (mode === "blur") {
+      // level ~ blur yarıçapı gibi çalışır
+      outBuf = await sharp(file.buffer).blur(Math.max(0.3, level / 10)).toBuffer();
+    } else {
+      // pixelate
+      const factor = Math.max(2, Math.round(Math.min(meta.width || 800, meta.height || 600) / Math.max(6, level)));
+      const smallW = Math.max(2, Math.round((meta.width || 800) / factor));
+      outBuf = await sharp(file.buffer)
+        .resize({ width: smallW, kernel: sharp.kernel.nearest })
+        .resize({ width: meta.width, kernel: sharp.kernel.nearest })
+        .toBuffer();
+    }
+
+    const dataUrl = `data:${file.mimetype || "image/png"};base64,${outBuf.toString("base64")}`;
+    return res.json({ output: dataUrl, via: "local" });
+  } catch (err) {
+    console.error("FACE-PIXELIZE ERROR:", err?.response?.data || err.message || err);
+    return res.status(500).json({ error: "FacePixelizeFailed", message: err?.message || "Unexpected error" });
+  }
+});
+
+
 
 // ---------------------------------------------
 // Server
