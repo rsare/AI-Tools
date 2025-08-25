@@ -14,6 +14,7 @@ Image Fixer – upload and get a cleaned/processed image (placeholder pipeline y
 - Consistent UI: sidebar, keyboard shortcuts, robust “scroll to top / to output” helpers
 
   Project Structure
+```
   rsare-ai-tools/
 ├─ index.js                 # Express server + API routes
 ├─ package.json
@@ -34,7 +35,7 @@ Image Fixer – upload and get a cleaned/processed image (placeholder pipeline y
          ├─ voiceGenerator.js
          ├─ videoGenerator.js
          └─ facePixelizer.js
-
+```
 
    Quick start
 1) Prerequisites
