@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Giriş / Kayıt</title>
+  <style>
+    :root{
+      --bg:#0b1328; --card:#101a33; --muted:#c9d2e3; --text:#eaf0ff; --accent:#5b8cff;
+      --radius:16px; --shadow:0 20px 60px rgba(0,0,0,.35);
+    }
+    html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;display:grid;place-items:center}
+    .card{width:min(480px,92vw);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px}
+    h1{margin:0 0 18px;font-size:clamp(20px,3vw,26px)}
+    .tabs{display:flex;gap:8px;margin-bottom:16px}
+    .tab{flex:1;padding:12px;border-radius:12px;border:1px solid #ffffff22;background:#ffffff12;color:#fff;cursor:pointer}
+    .tab.active{background:linear-gradient(135deg,#5b8cff,#7a5cff)}
+    label{display:block;margin:10px 0 6px;color:var(--muted)}
+    input{width:100%;padding:12px;border-radius:10px;border:1px solid #ffffff2a;background:#0f1630;color:#fff}
+    button{width:100%;padding:12px;border-radius:12px;border:1px solid #ffffff22;background:linear-gradient(135deg,#5b8cff,#7a5cff);color:#fff;font-weight:700;margin-top:14px;cursor:pointer}
+    .msg{margin-top:10px;color:#ffd7d7}
+    .ok{color:#8aff9f}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>AI Tools – Giriş / Kayıt</h1>
+
+    <div class="tabs">
+      <button class="tab active" id="tLogin">Giriş</button>
+      <button class="tab" id="tRegister">Kayıt Ol</button>
+    </div>
+
+    <form id="fLogin">
+      <label for="lemail">E-posta</label>
+      <input id="lemail" type="email" required />
+      <label for="lpass">Şifre</label>
+      <input id="lpass" type="password" required />
+      <button type="submit">Giriş Yap</button>
+      <div id="lmsg" class="msg"></div>
+    </form>
+
+    <form id="fRegister" style="display:none">
+      <label for="rname">Ad Soyad</label>
+      <input id="rname" required />
+      <label for="remail">E-posta</label>
+      <input id="remail" type="email" required />
+      <label for="rpass">Şifre (en az 6)</label>
+      <input id="rpass" type="password" minlength="6" required />
+      <button type="submit">Kayıt Ol</button>
+      <div id="rmsg" class="msg"></div>
+    </form>
+  </div>
+
+  <script>
+    // Zaten girişliyse ana sayfaya
+    fetch("/auth/me").then(r=>r.ok && (location.href="/"));
+
+    const tLogin = document.getElementById("tLogin");
+    const tRegister = document.getElementById("tRegister");
+    const fLogin = document.getElementById("fLogin");
+    const fRegister = document.getElementById("fRegister");
+    const lmsg = document.getElementById("lmsg");
+    const rmsg = document.getElementById("rmsg");
+
+    tLogin.onclick = () => {
+      tLogin.classList.add("active"); tRegister.classList.remove("active");
+      fLogin.style.display="block"; fRegister.style.display="none";
+      lmsg.textContent = rmsg.textContent = "";
+    };
+    tRegister.onclick = () => {
+      tRegister.classList.add("active"); tLogin.classList.remove("active");
+      fRegister.style.display="block"; fLogin.style.display="none";
+      lmsg.textContent = rmsg.textContent = "";
+    };
+
+    fLogin.onsubmit = async (e)=>{
+      e.preventDefault();
+      lmsg.textContent = "";
+      const email = document.getElementById("lemail").value.trim();
+      const password = document.getElementById("lpass").value;
+      const r = await fetch("/auth/login", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password})});
+      const j = await r.json();
+      if(!r.ok){ lmsg.textContent = j.error || "Giriş başarısız"; return; }
+      lmsg.textContent = "Giriş başarılı, yönlendiriliyor…"; lmsg.classList.add("ok");
+      setTimeout(()=>location.href="/", 600);
+    };
+
+    fRegister.onsubmit = async (e)=>{
+      e.preventDefault();
+      rmsg.textContent = "";
+      const name = document.getElementById("rname").value.trim();
+      const email = document.getElementById("remail").value.trim();
+      const password = document.getElementById("rpass").value;
+      const r = await fetch("/auth/register", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name,email,password})});
+      const j = await r.json();
+      if(!r.ok){ rmsg.textContent = j.error || "Kayıt başarısız"; return; }
+      rmsg.textContent = "Kayıt başarılı, yönlendiriliyor…"; rmsg.classList.add("ok");
+      setTimeout(()=>location.href="/", 600);
+    };
+  </script>
+</body>
+</html>

@@ -5,6 +5,13 @@
 // import { run as runImageFixer } from "./imageFixer.js";
 // import { run as runTextGenerator } from "./textGenerator.js";
 
+try {
+  const me = await fetch("/auth/me");
+  if (!me.ok) location.href = "/auth.html";
+} catch (_) {
+  location.href = "/auth.html";
+}
+
 // URL parametrelerinden hangi aracın çağrılacağını al
 const urlParams = new URLSearchParams(window.location.search);
 const toolName = urlParams.get('tool');

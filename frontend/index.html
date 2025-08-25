@@ -1,198 +1,97 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
-  <!-- index.html ve api.html <head> içine ekle (</title> altı) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI Tools Hub</title>
   <style>
-    :root {
-      --bg-deep: #0b1328;
-      --bg-hero: #0e1a33;
-      --bg-cards: #131b2f;
-      --text: #e9eef8;
-      --muted: #c9d2e3;
-      --card: #f5f6fa;
-      --cardText: #0f1830;
-      --shadow: 0 20px 60px rgba(0, 0, 0, .35);
-      --radius: 18px;
+    :root{
+      --bg-deep:#0b1328; --bg-hero:#0e1a33; --bg-cards:#131b2f;
+      --text:#e9eef8; --muted:#c9d2e3; --card:#f5f6fa; --cardText:#0f1830;
+      --shadow: 0 20px 60px rgba(0,0,0,.35); --radius: 18px;
     }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--text);background:var(--bg-deep);line-height:1.5}
 
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box
+    /* ÜST SAĞ AUTH BAR */
+    .authbar{
+      position:fixed; top:16px; right:16px; z-index:100000;
+      display:flex; gap:10px; align-items:center;
+      background:linear-gradient(180deg,#ffffff1a,#ffffff0d);
+      border:1px solid #ffffff26; border-radius:14px; padding:8px 10px;
+      backdrop-filter: blur(6px);
+      box-shadow:0 8px 24px #0006;
     }
-
-    html,
-    body {
-      height: 100%
-      
+    .auth-name{color:#fff; font-size:.95rem; opacity:.9}
+    .auth-btn{
+      background:linear-gradient(135deg,#3b82f6,#7c3aed); color:#fff; border:none;
+      padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
+      transition:transform .2s, box-shadow .2s; box-shadow:0 6px 16px rgba(0,0,0,.25);
     }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      color: var(--text);
-      background: var(--bg-deep);
-      line-height: 1.5
-      
+    .auth-btn:hover{ transform: translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,.3) }
+    .auth-link{
+      text-decoration:none; color:#fff; font-weight:700; padding:8px 12px; border-radius:10px;
+      border:1px solid #ffffff26; background:linear-gradient(135deg,#ffffff1a,#ffffff12);
+      transition:transform .2s, box-shadow .2s;
     }
+    .auth-link:hover{ transform: translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,.3) }
 
     /* HERO */
-    .hero {
-      position: relative;
-      min-height: 100svh;
-      display: grid;
-      place-items: center;
-      padding: clamp(24px, 4vw, 56px);
-      text-align: center;
-      overflow: hidden;
+    .hero{
+      position:relative; min-height:100svh; display:grid; place-items:center;
+      padding:clamp(24px,4vw,56px); text-align:center; overflow:hidden;
       background:
-        radial-gradient(55vmax 55vmax at 110% 70%, rgba(138, 61, 255, .35) 0%, transparent 60%),
-        radial-gradient(55vmax 55vmax at -10% 90%, rgba(21, 184, 255, .28) 0%, transparent 60%),
-        radial-gradient(1200px 600px at 50% -10%, rgba(255, 255, 255, .05) 0%, transparent 70%),
+        radial-gradient(55vmax 55vmax at 110% 70%, rgba(138,61,255,.35) 0%, transparent 60%),
+        radial-gradient(55vmax 55vmax at -10% 90%, rgba(21,184,255,.28) 0%, transparent 60%),
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.05) 0%, transparent 70%),
         var(--bg-hero);
-      box-shadow: inset 0 -120px 180px rgba(0, 0, 0, .35);
+      box-shadow: inset 0 -120px 180px rgba(0,0,0,.35);
     }
-
-    .hero__inner {
-      max-width: min(1100px, 92vw)
-    }
-
-    .hero__title {
-      font-weight: 800;
-      margin: 0 0 .75rem;
-      font-size: clamp(28px, 4.5vw, 56px)
-    }
-
-    .hero__subtitle {
-      margin: 0 auto 2.2rem;
-      color: var(--muted);
-      font-size: clamp(14px, 2.2vw, 18px);
-      max-width: 48ch
-    }
-
-    .spark {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(4px 4px at 18% 22%, #fff8 35%, transparent 40%),
-        radial-gradient(3px 3px at 86% 18%, #fff6 35%, transparent 40%),
-        radial-gradient(5px 5px at 72% 34%, #fff5 35%, transparent 40%),
-        radial-gradient(3px 3px at 8% 72%, #fff4 35%, transparent 40%),
-        radial-gradient(4px 4px at 60% 80%, #fff5 35%, transparent 40%)
-    }
-
-    .scroll {
-      position: absolute;
-      left: 50%;
-      bottom: 22px;
-      translate: -50% 0;
-      width: max(44px, 3.6vw);
-      height: max(44px, 3.6vw);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      background: linear-gradient(180deg, #ffffff1a, #ffffff08);
-      border: 1px solid #ffffff26;
-      backdrop-filter: blur(6px);
-      cursor: pointer;
-      transition: transform .25s, box-shadow .25s
-    }
-
-    .scroll:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px #0006
-    }
-
-    .scroll svg {
-      width: 52%;
-      height: 52%
-    }
+    .hero__inner{max-width:min(1100px,92vw)}
+    .hero__title{font-weight:800;margin:0 0 .75rem;font-size:clamp(28px,4.5vw,56px)}
+    .hero__subtitle{margin:0 auto 2.2rem;color:var(--muted);font-size:clamp(14px,2.2vw,18px);max-width:48ch}
+    .spark{position:absolute;inset:0;pointer-events:none;background:
+      radial-gradient(4px 4px at 18% 22%, #fff8 35%, transparent 40%),
+      radial-gradient(3px 3px at 86% 18%, #fff6 35%, transparent 40%),
+      radial-gradient(5px 5px at 72% 34%, #fff5 35%, transparent 40%),
+      radial-gradient(3px 3px at 8% 72%, #fff4 35%, transparent 40%),
+      radial-gradient(4px 4px at 60% 80%, #fff5 35%, transparent 40%)}
+    .scroll{position:absolute;left:50%;bottom:22px;translate:-50% 0;width:max(44px,3.6vw);height:max(44px,3.6vw);
+      border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(180deg,#ffffff1a,#ffffff08);
+      border:1px solid #ffffff26;backdrop-filter:blur(6px);cursor:pointer;transition:transform .25s,box-shadow .25s}
+    .scroll:hover{transform:translateY(-2px);box-shadow:0 8px 24px #0006}
+    .scroll svg{width:52%;height:52%}
 
     /* TOOLS */
-    .tools {
-      background: linear-gradient(180deg, var(--bg-hero) 0%, var(--bg-cards) 22%, var(--bg-cards) 100%);
-      padding: clamp(32px, 5.5vw, 80px) clamp(18px, 4.5vw, 40px)
-    }
+    .tools{background:linear-gradient(180deg,var(--bg-hero) 0%,var(--bg-cards) 22%,var(--bg-cards) 100%);
+      padding:clamp(32px,5.5vw,80px) clamp(18px,4.5vw,40px)}
+    .tools__container{max-width:1200px;margin:auto}
+    .tools__grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(16px,2.8vw,28px)}
+    .col-6{grid-column:span 6}.col-12{grid-column:span 12}
+    @media (max-width:760px){.col-6{grid-column:span 12}}
 
-    .tools__container {
-      max-width: 1200px;
-      margin: auto
+    .card{
+      display:flex;flex-direction:column;gap:.55rem;align-items:center;text-align:center;
+      text-decoration:none;background:var(--card);color:var(--cardText);
+      border-radius:var(--radius);padding:clamp(18px,2.8vw,26px);box-shadow:var(--shadow);
+      transition:transform .25s, box-shadow .25s, background .25s;
+      opacity:0; translate:0 22px;
     }
-
-    .tools__grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: clamp(16px, 2.8vw, 28px)
-    }
-
-    .col-6 {
-      grid-column: span 6
-    }
-
-    .col-12 {
-      grid-column: span 12
-    }
-
-    @media (max-width:760px) {
-      .col-6 {
-        grid-column: span 12
-      }
-    }
-
-    /* Tıklanabilir kart = anchor */
-    .card {
-      display: flex;
-      flex-direction: column;
-      gap: .55rem;
-      align-items: center;
-      text-align: center;
-      text-decoration: none;
-      background: var(--card);
-      color: var(--cardText);
-      border-radius: var(--radius);
-      padding: clamp(18px, 2.8vw, 26px);
-      box-shadow: var(--shadow);
-      transition: transform .25s, box-shadow .25s, background .25s;
-      opacity: 0;
-      translate: 0 22px;
-      /* scroll-in başlangıç */
-    }
-
-    .card.show {
-      opacity: 1;
-      translate: 0 0;
-      transition: opacity .5s ease, translate .5s ease
-    }
-
-    .card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 28px 70px rgba(0, 0, 0, .35)
-    }
-
-    .card__title {
-      font-weight: 800;
-      font-size: clamp(18px, 2.2vw, 22px);
-      margin: .2rem 0 .2rem;
-      color: #14203d
-    }
-
-    .card__desc {
-      color: #33405f;
-      font-size: clamp(14px, 1.9vw, 16px)
-    }
+    .card.show{opacity:1; translate:0 0; transition:opacity .5s ease, translate .5s ease}
+    .card:hover{transform:translateY(-6px);box-shadow:0 28px 70px rgba(0,0,0,.35)}
+    .card__title{font-weight:800;font-size:clamp(18px,2.2vw,22px);margin:.2rem 0 .2rem;color:#14203d}
+    .card__desc{color:#33405f;font-size:clamp(14px,1.9vw,16px)}
   </style>
 </head>
-
 <body>
+
+  <!-- ÜST SAĞ: Auth bar -->
+  <div class="authbar" id="authbar">
+    <span class="auth-name" id="authName" aria-live="polite"></span>
+    <a id="authLink" class="auth-link" href="/auth.html" style="display:none">Giriş / Kayıt</a>
+    <button id="logoutBtn" class="auth-btn" type="button" style="display:none">Çıkış Yap</button>
+  </div>
 
   <!-- HERO -->
   <section class="hero" id="top">
@@ -200,14 +99,11 @@
     <div class="hero__inner">
       <h1 class="hero__title">Her ihtiyacınıza uygun yapay zeka çözümleri</h1>
       <p class="hero__subtitle">
-        Görselleri iyileştirin, metin üretin, seslendirme ve video oluşturma gibi birçok aracı tek merkezden
-        deneyimleyin.
+        Görselleri iyileştirin, metin üretin, seslendirme ve video oluşturma gibi birçok aracı tek merkezden deneyimleyin.
       </p>
     </div>
     <button class="scroll" id="scrollToTools" aria-label="Araçlara in">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M6 9l6 6 6-6" />
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </button>
   </section>
 
@@ -226,6 +122,7 @@
           <p class="card__desc">Kelimelerden metin üretin</p>
         </a>
 
+
         <a class="card col-6" href="/api.html?tool=voiceGenerator">
           <h3 class="card__title">Voice Generator</h3>
           <p class="card__desc">Metinleri doğal seslere çevirin</p>
@@ -242,19 +139,52 @@
 
   <script>
     // Yumuşak kaydırma
-    document.getElementById('scrollToTools')?.addEventListener('click', () => {
-      document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('scrollToTools')?.addEventListener('click', ()=>{
+      document.getElementById('tools')?.scrollIntoView({behavior:'smooth'});
     });
 
     // Kartlarda scroll-in animasyonu
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); }
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){ e.target.classList.add('show'); io.unobserve(e.target); }
       });
-    }, { threshold: .2 });
-    document.querySelectorAll('.card').forEach(el => io.observe(el));
+    }, {threshold:.2});
+    document.querySelectorAll('.card').forEach(el=> io.observe(el));
+
+    // --- Auth bar kontrolü ---
+    (async function(){
+      const nameEl = document.getElementById('authName');
+      const linkEl = document.getElementById('authLink');
+      const outBtn = document.getElementById('logoutBtn');
+
+      try {
+        const r = await fetch('/auth/me', { credentials: 'same-origin' });
+        if (r.ok) {
+          const j = await r.json();
+          nameEl.textContent = j?.user?.name ? `Merhaba, ${j.user.name}` : 'Giriş yapıldı';
+          outBtn.style.display = 'inline-block';
+          linkEl.style.display = 'none';
+        } else {
+          nameEl.textContent = 'Ziyaretçi';
+          linkEl.style.display = 'inline-block';
+          outBtn.style.display = 'none';
+        }
+      } catch {
+        nameEl.textContent = 'Ziyaretçi';
+        linkEl.style.display = 'inline-block';
+        outBtn.style.display = 'none';
+      }
+
+      // Çıkış
+      outBtn?.addEventListener('click', async ()=>{
+        try{
+          await fetch('/auth/logout', { method:'POST', headers:{'Content-Type':'application/json'} });
+        } finally {
+          location.href = '/auth.html';
+        }
+      });
+    })();
   </script>
 </body>
 <footer>Created by Rumeysa Sare Bayram</footer>
-
 </html>

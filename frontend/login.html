@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Giriş Yap</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    body{background:#0b1328;color:#e9eef8;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px}
+    .card{width:min(420px,100%);background:#111a2f;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.35);padding:26px}
+    .title{font-size:1.6rem;font-weight:800;margin:0 0 6px}
+    .muted{color:#9fb0cc;margin:0 0 14px}
+    .input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2c3a57;background:#0f1526;color:#fff;margin:8px 0 14px}
+    .btn{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2c3a57;background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;font-weight:800;cursor:pointer}
+    .err{margin-top:10px;color:#ff9b9b;display:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 class="title">Giriş Yap</h1>
+    <p class="muted">Araçlara erişmek için kullanıcı adı ve şifrenizi girin.</p>
+
+    <form id="loginForm">
+      <label for="username" class="muted">Kullanıcı adı</label>
+      <input id="username" class="input" placeholder="admin" autocomplete="username" required>
+
+      <label for="password" class="muted">Şifre</label>
+      <input id="password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required>
+
+      <button class="btn" type="submit">Giriş</button>
+      <div id="err" class="err"></div>
+    </form>
+  </div>
+
+  <script src="/js/auth.js"></script>
+</body>
+</html>
