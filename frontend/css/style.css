@@ -1,42 +1,208 @@
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,Arial;background:#ffffcc;padding:1rem}
-header,footer{background:#fff8d3;padding:1rem;text-align:center;border-radius:12px;box-shadow:0 2px 6px #0001;margin-bottom:1rem}
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
-.tool-card{display:block;background:#fff;color:#222;text-decoration:none;border-radius:12px;padding:1rem;box-shadow:0 2px 10px #0001;transition:.2s}
-.tool-card:hover{transform:scale(1.02)}
+/* ===============================
+   Global Theme & Reset
+   =============================== */
+:root{
+  --brand-1:#6d9dfc;     /* primary */
+  --brand-2:#8b5cf6;     /* accent */
+  --brand-3:#22d3ee;     /* cyan accent */
 
-/* css/style.css */
+  --bg-deep:#0b1328;
+  --bg-hero:#0e1a33;
+  --bg-cards:#131b2f;
 
-.tools-grid {
-    display: grid;
-    /* Her satırda 2 kart ve aralarında 20px boşluk olacak */
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 20px;
-    max-width: 800px; /* Opsiyonel: Daha dar bir sayfa için */
-    margin: 40px auto; /* Ortalamak için */
+  --text:#e9eef8;
+  --muted:#c9d2e3;
+
+  --card:#f5f6fa;
+  --cardText:#0f1830;
+
+  --radius:18px;
+  --shadow-lg:0 28px 70px rgba(0,0,0,.35);
+  --shadow:0 20px 60px rgba(0,0,0,.35);
 }
 
-/* Kartların kendisi için stil */
-.tool-card {
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    text-align: center;
-    transition: transform 0.2s;
-    text-decoration: none;
-    color: #333;
+*,
+*::before,
+*::after{ box-sizing:border-box; }
+
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background:var(--bg-deep);
+  line-height:1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.tool-card:hover {
-    transform: translateY(-5px);
+/* ===============================
+   Layout helpers
+   =============================== */
+.container{ max-width:1200px; margin:auto; padding-inline:clamp(16px,4vw,40px); }
+.centered{ display:grid; place-items:center; min-height:100svh; }
+.card{
+  background:var(--card);
+  color:var(--cardText);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
 }
 
-  #grid { display:grid; gap:10px; grid-template-columns: 1fr; }
-  @media (min-width: 900px) { #grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-  .ifix-img { width:300%; height:auto; object-fit:contain; display:block; }
-  /* lightbox */
-  .lb-backdrop{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:9999}
-  .lb-backdrop.show{display:grid}
-  .lb-inner{max-width:min(92vw,1200px);max-height:90vh}
-  .lb-inner img{width:300%;height:auto;object-fit:contain;border-radius:12px}
+/* Ortak panel (tüm araç sayfaları) */
+.panel{
+  width:min(860px, 92vw);
+  margin:40px auto;
+  padding:28px 22px;
+  border-radius:20px;
+  background:#ffffff;
+  color:#0f1830;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);
+}
+
+/* ===============================
+   Headings & text
+   =============================== */
+.h1{ font-weight:800; font-size:clamp(28px,4.5vw,56px); margin:.2rem 0 .8rem; }
+.h2{ font-weight:800; font-size:clamp(22px,3vw,34px); margin:.2rem 0 .6rem; }
+.muted{ color:var(--muted); }
+
+/* ===============================
+   Buttons
+   =============================== */
+.btn{
+  appearance:none; border:0; cursor:pointer;
+  border-radius:14px; padding:12px 18px; font-weight:800; letter-spacing:.2px;
+  color:#fff; background-image:linear-gradient(135deg,var(--brand-1),var(--brand-2));
+  box-shadow:0 10px 24px rgba(59,130,246,.35);
+  transition: transform .08s, box-shadow .2s, opacity .2s;
+}
+.btn:hover{ transform:translateY(-1px); box-shadow:0 14px 34px rgba(59,130,246,.45); }
+.btn.secondary{ background:#1e2a44; border:1px solid #ffffff26; }
+.btn.sm{ padding:8px 12px; border-radius:10px; font-weight:700; }
+
+/* ===============================
+   Inputs
+   =============================== */
+.input, .textarea, .select{
+  width:100%;
+  color:#fff; background:#101522;
+  border:1px solid #ffffff22;
+  padding:12px 14px; border-radius:12px; outline:none;
+}
+.textarea{ resize:vertical; min-height:120px; }
+.select{ background:#101522; }
+.input::placeholder, .textarea::placeholder{ color:#94a3b8; }
+
+/* Dropzone */
+.drop{
+  border:2px dashed #ffffff26; border-radius:16px; padding:14px;
+  transition:.2s;
+}
+.drop.drag{ border-color:var(--brand-3); background:rgba(34,211,238,.06); }
+
+/* File pill */
+.file-pill{
+  display:inline-block; padding:8px 12px; border-radius:10px;
+  background:#ffffff10; border:1px solid #ffffff26; white-space:nowrap;
+}
+
+html, body { scroll-behavior: smooth; }
+
+/* ===============================
+   Output box (OKUNAKLI)
+   =============================== */
+.output{
+  margin-top:16px;
+  padding:16px 18px;
+  background:#ffffff;
+  border:1px solid #e6e8ef;
+  border-radius:14px;
+  color:#0f1830;
+  box-shadow:0 10px 24px rgba(0,0,0,.06);
+}
+.output p{
+  margin:0 0 1rem;
+  text-align:justify;
+  text-justify:inter-word;
+  hyphens:auto;
+}
+.output h1,.output h2,.output h3{
+  color:#0b1328;
+  margin:1rem 0 .5rem;
+  font-weight:800;
+}
+.output a{ color:#1d4ed8; }
+
+/* >>> yeni: listeler düzgün görünsün */
+.output ul, .output ol { padding-left: 1.25rem; margin: 0 0 1rem; }
+.output li { margin: .25rem 0; }
+
+/* Sabit Başa Dön butonu */
+.backtop{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:100001;
+  opacity:.95;
+}
+
+/* ===============================
+   Global Sidebar (Hamburger)
+   =============================== */
+.menu-button{
+  position:fixed; top:20px; left:20px; z-index:100000;
+  width:44px; height:44px; display:grid; place-items:center;
+  color:#fff; font-size:26px; user-select:none; cursor:pointer;
+  background:#0b1328; border:1px solid #ffffff26; border-radius:10px;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);
+}
+.sidebar{
+  position:fixed; top:0; left:-260px; width:260px; height:100%;
+  background:#0b1328; box-shadow:2px 0 18px rgba(0,0,0,.35);
+  transition:left .28s ease-in-out; z-index:99999; padding-top:60px;
+}
+.sidebar.open{ left:0; }
+.sidebar a{
+  display:flex; justify-content:flex-start; text-align:left; /* SOLA HİZALI */
+  padding:14px 20px;
+  color:#fff; text-decoration:none; font-size:17px;
+  border-bottom:1px solid #011028; transition:background-color .18s;
+}
+.sidebar a:hover{ background:#0f1d3a; }
+
+/* ===============================
+   Generated images / previews
+   =============================== */
+.gen-grid{ display:grid; gap:12px; grid-template-columns: 1fr; }
+@media (min-width: 900px){ .gen-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.gen-img{
+  width:100%; height:auto; object-fit:contain; display:block; border-radius:12px;
+  box-shadow:0 10px 26px rgba(0,0,0,.25);
+}
+
+/* Sabit "Başa Dön" butonu */
+.backtop{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:100001;
+  opacity:.95;
+}
+
+/* Cards on index */
+.tool-card{
+  display:flex; flex-direction:column; gap:.5rem; align-items:center; text-align:center;
+  text-decoration:none; background:var(--card); color:var(--cardText);
+  border-radius:var(--radius); padding:clamp(18px,2.8vw,26px); box-shadow:var(--shadow);
+  transition: transform .25s, box-shadow .25s;
+}
+.tool-card:hover{ transform:translateY(-6px); box-shadow: var(--shadow-lg); }
+.tool-card .title{ font-weight:800; font-size:clamp(18px,2.2vw,22px); margin:.2rem 0 .2rem; color:#14203d; }
+.tool-card .desc{ color:#33405f; font-size:clamp(14px,1.9vw,16px); }
+
+/* Utilities */
+.hidden{ display:none !important; }
+.text-center{ text-align:center; }
+.w-full{ width:100%; }
+.rounded-xl{ border-radius:14px; }
+.rounded-2xl{ border-radius:20px; }
